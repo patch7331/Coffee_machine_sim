@@ -8,16 +8,7 @@ public class C3192396A2P3 {
   public static void main(String[] args) {
     if (args.length == 1) {
       ArrayDeque<String> data = read(args);
-      //ADD THIS CODE INTO SIM CLASS
-      int clients = Integer.parseInt(data.poll());
-      for (int i = 0; i < clients; i++) {
-        Client nc = new Client(i, data.poll(), Integer.parseInt(data.poll()),
-            Integer.parseInt(data.poll()));
-        System.out.println(
-            "Process: " + nc.getProcessID() + " Type: " + nc.getType() + " TypeID: " + nc
-                .getClientID() + " Brew: " + nc.getBrewTime());
-      }
-      //test end
+      CoffeeSim sim = new CoffeeSim(data);
     } else {
       System.out.println("Argument error");
     }
