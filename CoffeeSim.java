@@ -1,13 +1,16 @@
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CoffeeSim {
 
   private List<Client> cObjs;
+  private List<Thread> syncedClients;
 
   public CoffeeSim(ArrayDeque<String> data) {
     cObjs = new ArrayList<>();
+    syncedClients = Collections.synchronizedList(new ArrayList<>());
     addClients(data);
   }
 
@@ -16,8 +19,10 @@ public class CoffeeSim {
     for (int i = 0; i < clients; i++) {
       Client nc = new Client(i, data.poll(), Integer.parseInt(data.poll()),
           Integer.parseInt(data.poll()));
+      Thread nt = new Thread(nc);
       cObjs.add(nc);
+      syncedClients.add(nt);
     }
   }
-  
+
 }

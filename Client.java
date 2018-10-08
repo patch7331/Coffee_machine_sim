@@ -1,4 +1,4 @@
-public class Client {
+public class Client implements Runnable {
 
   private int clientID;
   private int processID;
@@ -28,5 +28,10 @@ public class Client {
 
   public int getBrewTime() {
     return brewTime;
+  }
+
+  @Override
+  public void run() {
+
   }
 }
