@@ -6,17 +6,24 @@ import java.util.Arrays;
 public class C3192396A2P3 {
 
   public static void main(String[] args) {
-    if(args.length == 1) {
+    if (args.length == 1) {
       ArrayDeque<String> data = read(args);
-      for(String s : data) {
-        System.out.println(s);
+      //ADD THIS CODE INTO SIM CLASS
+      int clients = Integer.parseInt(data.poll());
+      for (int i = 0; i < clients; i++) {
+        Client nc = new Client(i, data.poll(), Integer.parseInt(data.poll()),
+            Integer.parseInt(data.poll()));
+        System.out.println(
+            "Process: " + nc.getProcessID() + " Type: " + nc.getType() + " TypeID: " + nc
+                .getClientID() + " Brew: " + nc.getBrewTime());
       }
-    }
-    else
+      //test end
+    } else {
       System.out.println("Argument error");
+    }
   }
 
-  //Turns file data into a manageable queue on integers
+  //Turns file data into a manageable queue of tokens
   public static ArrayDeque<String> read(String[] args) {
     ArrayDeque<String> clientData = new ArrayDeque<>();
     try {
@@ -28,8 +35,7 @@ public class C3192396A2P3 {
       }
       reader.close();
       return clientData;
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       System.err.format("Exception occurred trying to read '%s'.", args[0]);
       e.printStackTrace();
       return null;
