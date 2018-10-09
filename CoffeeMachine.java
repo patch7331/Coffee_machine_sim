@@ -59,4 +59,19 @@ public class CoffeeMachine extends Semaphore {
     return brewTime + time <= longestBrewFinishTime;
   }
 
+  public synchronized void setSwapType(Boolean x) {
+    swapType = x;
+  }
+
+  public synchronized void nextClient(int type) {
+    if(type == 0)
+      prevColdID++;
+    else
+      prevHotID++;
+  }
+
+  public int getTime() {
+    return time;
+  }
+
 }
