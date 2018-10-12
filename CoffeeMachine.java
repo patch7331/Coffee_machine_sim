@@ -79,7 +79,8 @@ public class CoffeeMachine {
     }
     //wait here for other dispensers to fill
     while ((activeDisp() < 3 && checkRemaining(type) > 2 && !swapType)
-        || (swapType && compareBrews() && activeDisp() < 3 && checkRemaining(type) > 2)) {
+        || (swapType && compareBrews() && activeDisp() < 3 && checkRemaining(type) > 2)
+        || (checkRemaining(type) == 2 && activeDisp() < 2)) { //problem line?
       if((swapType && compareBrews() && activeDisp() < 3)) {
         shortBrew = true;
         notifyAll();
@@ -134,7 +135,7 @@ public class CoffeeMachine {
     currentOutTimes.clear();
     nextEvent = -1;
     shortBrew = false;
-    //System.out.println(id + " finished");
+    //System.out.println(id + " finished. Hot = "+hotRemain+" Cold = "+coldRemain);
     //threadFinished = true;
     notifyAll();
   }
