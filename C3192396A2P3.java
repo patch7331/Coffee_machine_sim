@@ -1,3 +1,9 @@
+//This program simulates a Coffee Machine with 3 dispensers, the machine can do hot or
+//cold but only one mode at once. Threads are used to simulate clients using the
+//machine for different amounts of time
+//Input data is taken from a file, output to terminal
+//Created by Adam Crocker for COMP2240
+//Last Edited 12/10/2018
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayDeque;

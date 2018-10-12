@@ -1,24 +1,27 @@
+//CoffeeMachine is used by Client threads attempting to access the Dispenser resource
+//Threads are scheduled using monitor and while loops
+//The program lives and dies with the dispWaitLogic class, edit at own risk
+//Created by Adam Crocker for COMP2240
+//Last Edited 12/10/2018
 import java.util.ArrayList;
 import java.util.List;
 
 public class CoffeeMachine {
 
   private int mode; //0 = cold, 1 = hot
-  private int time;
-  private int longestBrewFinishTime = 0;
-  private int nextHotID = 1;
+  private int time; //sim time
+  private int longestBrewFinishTime = 0;  //longest brewing time of client for batch
+  private int nextHotID = 1;  //used to order the client threads
   private int nextColdID = 1;
-  private int hotRemain = 0;
+  private int hotRemain = 0;  //how many hot/cold clients are in the sim
   private int coldRemain = 0;
   private boolean init = false; //used to set mode triggered by first thread
   private boolean swapType = false; //stops one coffee type from dominating
-  private int nextEvent = -1;
-
-  private Integer[] dispensers;
-  private int nextBrewTime = -1;
-  private Boolean shortBrew = false;
-  private List<Integer> currentOutTimes;
-  private Boolean threadFinished = false;
+  private int nextEvent = -1; //used to increment time discretely
+  private Integer[] dispensers; //3 dispensers to be consumed
+  private int nextBrewTime = -1;  //used to check if another coffee can brew before longestFinishTime
+  private Boolean shortBrew = false;  //breaks client out of wait pool if they can brew
+  private List<Integer> currentOutTimes;  //used to compare smallest time increment
 
 
   public CoffeeMachine(int i) {
@@ -43,9 +46,10 @@ public class CoffeeMachine {
       throws InterruptedException {
     while (mode != type || id != getNextID(type) || activeDisp() == 3 || swapType) {
       //checks to see if other clients of same type can brew before current longest is done
-      if (id == getNextID(type) && swapType && mode == type) {
+      if (id == getNextID(type) && swapType && mode == type ) {
         //breaks out of loop if client can use machine
-        if (shortBrew) {
+        if (shortBrew && activeDisp() != 3) {
+          System.out.println(id+" broke out using shortBrew");
           break;
         }
         nextBrewTime = brewTime;
@@ -56,36 +60,52 @@ public class CoffeeMachine {
   }
 
   public synchronized void updateMachine(int brewTime, int type, int id) {
-    if(shortBrew) {
-      //System.out.println(id+" broke out using shortBrew");
-    }
     if (!swapType) {
       setLongestBrewFinishTime(brewTime);
     }
-    if (activeDisp() == 3 || checkRemaining(type) < 3 && activeDisp() > 1
-        || checkRemaining(type) == 1) {
+    if (activeDisp() == 3 || checkRemaining(type) == activeDisp()) {
       setSwapType(true);
+      System.out.println("swapType = true");
     }
     nextID(type);
     notifyAll();
   }
 
+  //true, must wait. false, continue
+  public synchronized Boolean dispWaitLogic(int type,int id) {
+    //final thread
+    if(checkRemaining(type) == 1)
+      return false;
+    //+3 threads
+    if(activeDisp() < 3 && checkRemaining(type) > 2 && !swapType)
+      return true;
+    //1 thread + typeChange + nextBrew is too long
+    if(activeDisp() < 3 && swapType && !compareBrews(type))
+      return false;
+    //1 thread + typeChange + shortBrew
+    if(activeDisp() < 3 && swapType && compareBrews(type))
+      return true;
+    //full dispensers
+    if(activeDisp() == 3)
+      return false;
+    //System.out.println(id+" logic error");
+    return false;
+  }
+
   public synchronized void waitForDispensers(int type, int id) throws InterruptedException {
-    //wait here to check if next client can slip in during swapType
-    while (nextBrewTime == -1 && swapType ) {
-      //System.out.println(id+ " waiting for nextBrewTime");
+    wait(50); //magic wait for consistency, it just works
+    while (nextBrewTime == -1 && swapType && !(checkRemaining(type) <= 3)) {
+      System.out.println(id+ " waiting for nextBrewTime");
       notifyAll();
       wait();
     }
     //wait here for other dispensers to fill
-    while ((activeDisp() < 3 && checkRemaining(type) > 2 && !swapType)
-        || (swapType && compareBrews() && activeDisp() < 3 && checkRemaining(type) > 2)
-        || (checkRemaining(type) == 2 && activeDisp() < 2)) { //problem line?
-      if((swapType && compareBrews() && activeDisp() < 3)) {
+    while (dispWaitLogic(type,id)) {
+      if((swapType && compareBrews(type) && activeDisp() < 3)) {
         shortBrew = true;
         notifyAll();
       }
-      //System.out.println(id+ " waiting for other dispensers to fill");
+      System.out.println(id+ " waiting for other dispensers to fill");
       wait();
     }
   }
@@ -99,7 +119,7 @@ public class CoffeeMachine {
 
   public synchronized void waitForSetTimes(int id) throws InterruptedException {
     while(currentOutTimes.size() < activeDisp() && !currentOutTimes.isEmpty()) {
-      //System.out.println(id+ " waiting for setTimes");
+      System.out.println(id+ " waiting for setTimes");
       wait();
     }
   }
@@ -135,8 +155,7 @@ public class CoffeeMachine {
     currentOutTimes.clear();
     nextEvent = -1;
     shortBrew = false;
-    //System.out.println(id + " finished. Hot = "+hotRemain+" Cold = "+coldRemain);
-    //threadFinished = true;
+    System.out.println(id + " finished. Hot = "+hotRemain+" Cold = "+coldRemain);
     notifyAll();
   }
 
@@ -149,7 +168,9 @@ public class CoffeeMachine {
 
   //compares the brewtime of new clients in swaptype to see if they can fit in before
   //the longest brew finishes
-  public Boolean compareBrews() {
+  public synchronized Boolean compareBrews(int type) {
+    if(activeDisp() == checkRemaining(type))
+      nextBrewTime = -1;
     if(nextBrewTime == -1)
       return false;
     else
