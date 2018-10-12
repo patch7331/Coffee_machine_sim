@@ -31,8 +31,6 @@ public class CoffeeMachine {
     initArrays();
   }
 
-  //Logic For Threads
-
   //threads come here first to check if they are the first thread
   public synchronized void checkInit(int type) {
     if (!init) {
@@ -49,7 +47,7 @@ public class CoffeeMachine {
       if (id == getNextID(type) && swapType && mode == type ) {
         //breaks out of loop if client can use machine
         if (shortBrew && activeDisp() != 3) {
-          System.out.println(id+" broke out using shortBrew");
+          //System.out.println(id+" broke out using shortBrew");
           break;
         }
         nextBrewTime = brewTime;
@@ -59,24 +57,26 @@ public class CoffeeMachine {
     }
   }
 
+  //updates machine with client info after they consume a dispenser
   public synchronized void updateMachine(int brewTime, int type, int id) {
     if (!swapType) {
       setLongestBrewFinishTime(brewTime);
     }
+    //once all 3 dispenser are taken or no more of type remain, prepare to swap types
     if (activeDisp() == 3 || checkRemaining(type) == activeDisp()) {
       setSwapType(true);
-      System.out.println("swapType = true");
+      //System.out.println("swapType = true");
     }
     nextID(type);
     notifyAll();
   }
 
-  //true, must wait. false, continue
+  //true = wait in dispenser loop. false = continue
   public synchronized Boolean dispWaitLogic(int type,int id) {
     //final thread
     if(checkRemaining(type) == 1)
       return false;
-    //+3 threads
+    //common, many threads
     if(activeDisp() < 3 && checkRemaining(type) > 2 && !swapType)
       return true;
     //1 thread + typeChange + nextBrew is too long
@@ -92,10 +92,11 @@ public class CoffeeMachine {
     return false;
   }
 
+  //threads wait here for dispensers to be consumed before continuing
   public synchronized void waitForDispensers(int type, int id) throws InterruptedException {
     wait(50); //magic wait for consistency, it just works
     while (nextBrewTime == -1 && swapType && !(checkRemaining(type) <= 3)) {
-      System.out.println(id+ " waiting for nextBrewTime");
+      //System.out.println(id+ " waiting for nextBrewTime");
       notifyAll();
       wait();
     }
@@ -105,25 +106,27 @@ public class CoffeeMachine {
         shortBrew = true;
         notifyAll();
       }
-      System.out.println(id+ " waiting for other dispensers to fill");
+      //System.out.println(id+ " waiting for other dispensers to fill");
       wait();
     }
   }
 
-  //set time to shortest next event
+  //add thread finish times to list to compare in advanceTime
   public synchronized void setOutTimes(int outTime) {
     currentOutTimes.add(outTime);
     //System.out.println("list size = " + currentOutTimes.size());
     notifyAll();
   }
 
+  //threads wait for everyone to add to the time list
   public synchronized void waitForSetTimes(int id) throws InterruptedException {
     while(currentOutTimes.size() < activeDisp() && !currentOutTimes.isEmpty()) {
-      System.out.println(id+ " waiting for setTimes");
+      //System.out.println(id+ " waiting for setTimes");
       wait();
     }
   }
 
+  //increment time to the lowest number next event
   public synchronized void advanceTime() {
     for(Integer times : currentOutTimes) {
       if(times < nextEvent || nextEvent == -1)
@@ -136,16 +139,15 @@ public class CoffeeMachine {
     notifyAll();
   }
 
-  //need to figure out a way to signal other thread has finished
-  public synchronized void waitForEnd(int id) throws InterruptedException {
-    /*while(!threadFinished) {
-      System.out.println(id+ " waiting for thread to die");
-      wait();
-    }*/
+  //Could not figure out an efficient thread safe way to wait for thread to die
+  //without the looping threads destroying everything.
+  public synchronized void waitForEnd() throws InterruptedException {
     wait(500);
   }
 
+  //Thread has reached the end, updates machine, returns dispenser
   public synchronized void coffeeFinished(int type,int id) {
+    //if final thread at the end of a swap cycle, change mode for other types
     if(activeDisp() == 1 && swapType) {
       setMode(type);
       swapType = false;
@@ -155,11 +157,11 @@ public class CoffeeMachine {
     currentOutTimes.clear();
     nextEvent = -1;
     shortBrew = false;
-    System.out.println(id + " finished. Hot = "+hotRemain+" Cold = "+coldRemain);
+    //System.out.println(id + " finished. Hot = "+hotRemain+" Cold = "+coldRemain);
     notifyAll();
   }
 
-
+  //checks if new brew will be the longest brew for that cycle
   public synchronized void setLongestBrewFinishTime(int brewTime) {
     if (brewTime + time > longestBrewFinishTime) {
       longestBrewFinishTime = brewTime + time;
@@ -177,14 +179,12 @@ public class CoffeeMachine {
       return nextBrewTime + time <= longestBrewFinishTime;
   }
 
+  //sets swap type, not sure why i made this a method
   public synchronized void setSwapType(Boolean set) {
     swapType = set;
   }
 
-  public int getMode() {
-    return mode;
-  }
-
+  //changes between hot and cold modes
   public void setMode(int type) {
     if (type == 0) {
       mode = 1;
@@ -193,6 +193,7 @@ public class CoffeeMachine {
     }
   }
 
+  //increments id so the next client can exit the wait pool
   public synchronized void nextID(int type) {
     if (type == 0) {
       nextColdID++;
@@ -201,6 +202,7 @@ public class CoffeeMachine {
     }
   }
 
+  //returns id of next client out of the wait pool
   public int getNextID(int type) {
     if (type == 0) {
       return nextColdID;
@@ -209,17 +211,19 @@ public class CoffeeMachine {
     }
   }
 
+  //returns simulation time
   public int getTime() {
     return time;
   }
 
-  //Dispenser logic
+  //sets up dispenser array, -1 = not in use
   public void initArrays() {
     for (int i = 0; i < dispensers.length; i++) {
       dispensers[i] = -1;
     }
   }
 
+  //returns consumed dispensers
   public int activeDisp() {
     int count = 0;
     for (Integer i : dispensers) {
@@ -230,6 +234,7 @@ public class CoffeeMachine {
     return count;
   }
 
+  //searchs for a -1 cell and overwrites it with clientID
   public synchronized int takeDisp(int id) {
     for (int i = 0; i < dispensers.length; i++) {
       if (dispensers[i] == -1) {
@@ -253,7 +258,7 @@ public class CoffeeMachine {
     }
   }
 
-  //Client count logic
+  //return clients still in simulation
   public int checkRemaining(int type) {
     if (type == 0) {
       return coldRemain;
@@ -262,6 +267,7 @@ public class CoffeeMachine {
     }
   }
 
+  //removes client from count
   public void deleteClient(int type) {
     if (type == 0) {
       coldRemain--;
@@ -270,10 +276,12 @@ public class CoffeeMachine {
     }
   }
 
+  //set amount of hot type clients
   public void addHot(int hotClients) {
     hotRemain = hotClients;
   }
 
+  //set amount of cold type clients
   public void addCold(int coldClients) {
     coldRemain = coldClients;
   }
