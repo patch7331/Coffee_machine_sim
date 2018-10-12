@@ -5,10 +5,11 @@ import java.util.Arrays;
 
 public class C3192396A2P3 {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
     if (args.length == 1) {
       ArrayDeque<String> data = read(args);
       CoffeeSim sim = new CoffeeSim(data);
+      sim.runSim();
     } else {
       System.out.println("Argument error");
     }
