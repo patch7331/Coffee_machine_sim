@@ -1,4 +1,4 @@
-# comp-2240-a2-p3
+# Coffee Machine
 Hot/Cold Coffee Machine Problem with Threads
 
 Requires text file data as argument, see inputdata file.
