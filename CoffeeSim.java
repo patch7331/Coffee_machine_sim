@@ -1,7 +1,5 @@
 //CoffeeSim handles the creation of objects and threads. It assigns them data and
 //starts the threads
-//Created by Adam Crocker for COMP2240
-//Last Edited 12/10/2018
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;

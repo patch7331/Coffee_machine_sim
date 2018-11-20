@@ -1,7 +1,5 @@
 //Client objects are threads compete for resources in CoffeeMachine
 //clients are hot or cold, they have a set amount of time they spend brewing
-//Created by Adam Crocker for COMP2240
-//Last Edited 12/10/2018
 public class Client implements Runnable {
 
   private int clientID; //used for ordering threads and output
@@ -20,7 +18,7 @@ public class Client implements Runnable {
     convertTypeString(type);
   }
 
-  //Converts stinky string data into delicious int
+  //Converts string data to int
   public void convertTypeString(String type) {
     if (type.equals("H")) {
       this.type = 1;
@@ -28,8 +26,6 @@ public class Client implements Runnable {
       this.type = 0;
     }
   }
-
-  //Getters
 
   //used to count how many clients of a type were created
   public int getType() {

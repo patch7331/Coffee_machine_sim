@@ -2,14 +2,12 @@
 //cold but only one mode at once. Threads are used to simulate clients using the
 //machine for different amounts of time
 //Input data is taken from a file, output to terminal
-//Created by Adam Crocker for COMP2240
-//Last Edited 12/10/2018
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 
-public class C3192396A2P3 {
+public class A2P3 {
 
   public static void main(String[] args) throws InterruptedException {
     if (args.length == 1) {

@@ -1,8 +1,6 @@
 //CoffeeMachine is used by Client threads attempting to access the Dispenser resource
 //Threads are scheduled using monitor and while loops
 //The program lives and dies with the dispWaitLogic class, edit at own risk
-//Created by Adam Crocker for COMP2240
-//Last Edited 12/10/2018
 import java.util.ArrayList;
 import java.util.List;
 
